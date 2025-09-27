@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Catch Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 30%, #3b82f6 70%, #60a5fa 100%);
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+            user-select: none;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1e3a8a, #1e40af);
+            padding: 15px 20px;
+            border-bottom: 4px solid #10b981;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            min-height: 80px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-icon {
+            font-size: 36px;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .game-title {
+            font-size: clamp(18px, 4vw, 28px);
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            line-height: 1.2;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .score {
+            font-size: clamp(16px, 3vw, 22px);
+            font-weight: bold;
+            color: white;
+            background: rgba(16, 185, 129, 0.9);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .target-letter {
+            font-size: clamp(24px, 5vw, 36px);
+            font-weight: bold;
+            color: white;
+            background: rgba(16, 185, 129, 0.95);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 3px solid white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            animation: targetPulse 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes targetPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .clouds {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            pointer-events: none;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+            animation: float 6s ease-in-out infinite;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .cloud:before,
+        .cloud:after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+        }
+
+        .cloud1 {
+            width: 12vw;
+            height: 6vw;
+            top: 15vh;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .cloud1:before {
+            width: 7.5vw;
+            height: 7.5vw;
+            top: -3.75vw;
+            left: 1.5vw;
+        }
+
+        .cloud1:after {
+            width: 9vw;
+            height: 6vw;
+            top: -2.25vw;
+            right: 1.5vw;
+        }
+
+        .cloud2 {
+            width: 10vw;
+            height: 5vw;
+            top: 20vh;
+            right: 15%;
+            animation-delay: -2s;
+        }
+
+        .cloud2:before {
+            width: 6vw;
+            height: 6vw;
+            top: -3vw;
+            left: 1.2vw;
+        }
+
+        .cloud2:after {
+            width: 7.5vw;
+            height: 5vw;
+            top: -1.5vw;
+            right: 1.2vw;
+        }
+
+        .cloud3 {
+            width: 11vw;
+            height: 5.5vw;
+            top: 12vh;
+            left: 65%;
+            animation-delay: -4s;
+        }
+
+        .cloud3:before {
+            width: 6.75vw;
+            height: 6.75vw;
+            top: -3.3vw;
+            left: 1.8vw;
+        }
+
+        .cloud3:after {
+            width: 8.25vw;
+            height: 5.5vw;
+            top: -1.8vw;
+            right: 1.8vw;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .falling-letter {
+            position: absolute;
+            font-size: clamp(48px, 8vw, 72px);
+            font-weight: 900;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            cursor: pointer;
+            user-select: none;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+            z-index: 100;
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 50%;
+            background: linear-gradient(135deg, white, #f0f9ff);
+            border: 4px solid #10b981;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            animation: letterBounce 2.5s ease-in-out infinite;
+            touch-action: manipulation;
+        }
+
+        .falling-letter:hover,
+        .falling-letter:active {
+            transform: scale(1.15);
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+        }
+
+        @keyframes letterBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .letter-collector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(100px, 15vw, 140px);
+            height: clamp(80px, 12vw, 120px);
+            z-index: 500;
+            animation: collectorFloat 4s ease-in-out infinite;
+        }
+
+        .collector-body {
+            width: 100%;
+            height: 70%;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            border-radius: 50% 50% 40% 40%;
+            position: relative;
+            border: 3px solid #1e3a8a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .collector-face {
+            font-size: clamp(24px, 4vw, 32px);
+            animation: faceChange 3s ease-in-out infinite;
+        }
+
+        .collector-base {
+            width: 80%;
+            height: 30%;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 40% 40% 20% 20%;
+            position: absolute;
+            bottom: -15%;
+            left: 10%;
+            border: 2px solid #10b981;
+        }
+
+        @keyframes collectorFloat {
+            0%, 100% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        @keyframes faceChange {
+            0%, 70%, 100% { content: '😊'; }
+            15%, 55% { content: '😄'; }
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(20px, 4vw, 28px);
+            font-weight: bold;
+            color: #1e3a8a;
+            background: linear-gradient(135deg, white, #f0f9ff);
+            padding: clamp(20px, 4vw, 40px);
+            border-radius: 25px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+            z-index: 1001;
+            display: none;
+            text-align: center;
+            border: 4px solid #10b981;
+            max-width: 90vw;
+        }
+
+        .start-button {
+            font-size: clamp(18px, 3.5vw, 24px);
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            border: none;
+            padding: clamp(12px, 3vw, 18px) clamp(24px, 5vw, 35px);
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+            margin-top: clamp(15px, 3vw, 25px);
+            border: 3px solid white;
+            touch-action: manipulation;
+        }
+
+        .start-button:hover,
+        .start-button:active {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .particle {
+            position: absolute;
+            width: clamp(8px, 2vw, 15px);
+            height: clamp(8px, 2vw, 15px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        @keyframes sparkle {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes starBurst {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--star-dx), var(--star-dy)) scale(0.2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes successMessage {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            20% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) translateY(-80px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes tryAgainMessage {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+            20% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8) translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+                min-height: 70px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .header-left {
+                gap: 10px;
+                flex: 1;
+            }
+
+            .game-icon {
+                font-size: 28px;
+                padding: 6px 10px;
+            }
+
+            .header-right {
+                gap: 10px;
+            }
+
+            .falling-letter {
+                border-width: 3px;
+                min-width: 80px;
+                min-height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .letter-collector {
+                bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                gap: 8px;
+                padding: 12px;
+                min-height: auto;
+            }
+
+            .header-left,
+            .header-right {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .falling-letter {
+                min-width: 70px;
+                min-height: 70px;
+            }
+
+            .clouds {
+                height: 200px;
+            }
+
+            .letter-collector {
+                bottom: 25px;
+                width: clamp(120px, 20vw, 160px);
+                height: clamp(100px, 16vw, 140px);
+            }
+
+            .collector-face {
+                font-size: clamp(28px, 6vw, 40px);
+            }
+        }
+
+        /* Touch-friendly interactions */
+        @media (hover: none) {
+            .falling-letter:active {
+                transform: scale(1.2);
+            }
+
+            .start-button:active {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01s !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01s !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="header-left">
+                <div class="game-icon">🎯</div>
+                <div class="game-title">Letter Catch<br>Adventure</div>
+            </div>
+            <div class="header-right">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="target-letter">Find: <span id="target">A</span></div>
+            </div>
+        </div>
+        
+        <div class="clouds">
+            <div class="cloud cloud1"></div>
+            <div class="cloud cloud2"></div>
+            <div class="cloud cloud3"></div>
+        </div>
+        
+        <div class="message" id="message">
+            Welcome to Letter Catch Adventure!<br>
+            Tap the falling letters that match the target letter!
+            <button class="start-button" onclick="startGame()">Start Adventure!</button>
+        </div>
+        
+        <div class="letter-collector">
+            <div class="collector-body">
+                <div class="collector-face">😊</div>
+            </div>
+            <div class="collector-base"></div>
+        </div>
+    </div>
+
+    <script>
+        let gameActive = false;
+        let score = 0;
+        let currentTarget = 'A';
+        let fallingLetters = [];
+        let gameSpeed = 3000;
+        let letterSpeed = 1;
+
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const colors = ['#1e3a8a', '#10b981', '#3b82f6', '#34d399', '#1e40af', '#059669', '#2563eb', '#16a34a'];
+        
+        // Touch and mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        function startGame() {
+            document.getElementById('message').style.display = 'none';
+            gameActive = true;
+            score = 0;
+            updateScore();
+            nextTarget();
+            spawnLetters();
+            updateCollectorFace('😄');
+            
+            // Initialize audio context on first user interaction (required for mobile)
+            try {
+                if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume();
+                    }
+                }
+            } catch (e) {
+                console.log('Audio initialization failed');
+            }
+        }
+
+        function nextTarget() {
+            const oldTarget = currentTarget;
+            do {
+                currentTarget = letters[Math.floor(Math.random() * letters.length)];
+            } while (currentTarget === oldTarget && letters.length > 1);
+            
+            document.getElementById('target').textContent = currentTarget;
+        }
+
+        function updateCollectorFace(emotion) {
+            const face = document.querySelector('.collector-face');
+            if (face) {
+                face.textContent = emotion;
+                setTimeout(() => {
+                    if (gameActive) face.textContent = '😊';
+                }, 1500);
+            }
+        }
+
+        function spawnLetters() {
+            if (!gameActive) return;
+            
+            createFallingLetter();
+            setTimeout(spawnLetters, gameSpeed);
+        }
+
+        function createFallingLetter() {
+            const letter = document.createElement('div');
+            letter.className = 'falling-letter';
+            
+            // 85% chance of correct letter, 15% chance of random letter
+            const isCorrect = Math.random() < 0.85;
+            const letterText = isCorrect ? currentTarget : letters[Math.floor(Math.random() * letters.length)];
+            
+            letter.textContent = letterText;
+            letter.dataset.letter = letterText;
+            letter.style.color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Responsive positioning
+            const letterSize = Math.min(window.innerWidth * 0.15, 140);
+            const maxLeft = window.innerWidth - letterSize;
+            letter.style.left = Math.max(letterSize * 0.5, Math.random() * maxLeft) + 'px';
+            letter.style.top = '-150px';
+            
+            document.querySelector('.game-container').appendChild(letter);
+            fallingLetters.push(letter);
+            
+            // Add both click and touch event listeners
+            const handleClick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (letterText === currentTarget) {
+                    catchCorrectLetter(letter);
+                } else {
+                    catchWrongLetter(letter);
+                }
+            };
+
+            letter.addEventListener('click', handleClick);
+            if (isTouch) {
+                letter.addEventListener('touchstart', handleClick, {passive: false});
+            }
+            
+            animateFallingLetter(letter);
+        }
+
+        function animateFallingLetter(letter) {
+            let position = -150;
+            const fall = setInterval(() => {
+                if (!gameActive || !letter.parentNode) {
+                    clearInterval(fall);
+                    return;
+                }
+                
+                position += letterSpeed;
+                letter.style.top = position + 'px';
+                
+                // Remove letter if it goes off screen
+                if (position > window.innerHeight + 150) {
+                    clearInterval(fall);
+                    if (letter.parentNode) {
+                        letter.remove();
+                    }
+                    fallingLetters = fallingLetters.filter(l => l !== letter);
+                }
+            }, 20);
+        }
+
+        function catchCorrectLetter(letter) {
+            score += 1;
+            updateScore();
+            updateCollectorFace('🤩');
+            
+            // Get letter position for effects
+            const rect = letter.getBoundingClientRect();
+            
+            // Create multiple visual effects
+            createParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#10b981');
+            createStars(rect.left + rect.width/2, rect.top + rect.height/2);
+            showSuccessMessage(rect.left + rect.width/2, rect.top + rect.height/2);
+            playSuccessSound();
+            
+            // Remove letter immediately
+            if (letter.parentNode) {
+                letter.remove();
+            }
+            fallingLetters = fallingLetters.filter(l => l !== letter);
+            
+            // Increase difficulty slightly
+            if (score % 10 === 0 && gameSpeed > 1500) {
+                gameSpeed -= 200;
+                letterSpeed += 0.2;
+            }
+            
+            // Change target letter every 5 points
+            if (score % 5 === 0) {
+                nextTarget();
+            }
+        }
+
+        function catchWrongLetter(letter) {
+            updateCollectorFace('🤔');
+            
+            // Get letter position for effects
+            const rect = letter.getBoundingClientRect();
+            
+            // Gentle feedback for wrong letters
+            createParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#3b82f6');
+            showTryAgainMessage(rect.left + rect.width/2, rect.top + rect.height/2);
+            playTryAgainSound();
+            
+            // Remove letter immediately
+            if (letter.parentNode) {
+                letter.remove();
+            }
+            fallingLetters = fallingLetters.filter(l => l !== letter);
+        }
+
+        function createStars(x, y) {
+            const starShapes = ['⭐', '✨', '🌟', '💫', '🎉', '🎊'];
+            for (let i = 0; i < 6; i++) {
+                const star = document.createElement('div');
+                star.textContent = starShapes[Math.floor(Math.random() * starShapes.length)];
+                star.style.position = 'absolute';
+                star.style.left = x + 'px';
+                star.style.top = y + 'px';
+                star.style.fontSize = isMobile ? '24px' : '32px';
+                star.style.pointerEvents = 'none';
+                star.style.zIndex = '300';
+                star.style.animation = `starBurst 2s ease-out forwards`;
+                star.style.animationDelay = (i * 0.1) + 's';
+                
+                // Random direction for stars
+                const angle = (Math.random() * 360) * (Math.PI / 180);
+                const distance = isMobile ? 40 + Math.random() * 30 : 60 + Math.random() * 40;
+                star.style.setProperty('--star-dx', Math.cos(angle) * distance + 'px');
+                star.style.setProperty('--star-dy', Math.sin(angle) * distance + 'px');
+                
+                document.querySelector('.game-container').appendChild(star);
+                
+                setTimeout(() => {
+                    if (star.parentNode) {
+                        star.remove();
+                    }
+                }, 2000);
+            }
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.backgroundColor = color;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.animation = `sparkle 1.5s ease-out forwards`;
+                particle.style.animationDelay = (i * 0.1) + 's';
+                
+                document.querySelector('.game-container').appendChild(particle);
+                
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.remove();
+                    }
+                }, 1500);
+            }
+        }
+
+        function showSuccessMessage(x, y) {
+            const messages = ['Amazing!', 'Perfect!', 'Great Job!', 'Awesome!', 'Fantastic!'];
+            const message = document.createElement('div');
+            message.textContent = messages[Math.floor(Math.random() * messages.length)];
+            message.style.position = 'absolute';
+            message.style.left = (x - 50) + 'px';
+            message.style.top = (y - 30) + 'px';
+            message.style.fontSize = isMobile ? '28px' : '40px';
+            message.style.fontWeight = 'bold';
+            message.style.color = '#10b981';
+            message.style.textShadow = '3px 3px 8px rgba(0,0,0,0.5)';
+            message.style.pointerEvents = 'none';
+            message.style.zIndex = '400';
+            message.style.animation = 'successMessage 2.5s ease-out forwards';
+            
+            document.querySelector('.game-container').appendChild(message);
+            
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.remove();
+                }
+            }, 2500);
+        }
+
+        function showTryAgainMessage(x, y) {
+            const messages = ['Keep Trying!', 'Try Again!', 'You Can Do It!', 'Look for ' + currentTarget + '!'];
+            const message = document.createElement('div');
+            message.textContent = messages[Math.floor(Math.random() * messages.length)];
+            message.style.position = 'absolute';
+            message.style.left = (x - 60) + 'px';
+            message.style.top = (y - 30) + 'px';
+            message.style.fontSize = isMobile ? '24px' : '32px';
+            message.style.fontWeight = 'bold';
+            message.style.color = '#3b82f6';
+            message.style.textShadow = '2px 2px 6px rgba(0,0,0,0.4)';
+            message.style.pointerEvents = 'none';
+            message.style.zIndex = '400';
+            message.style.animation = 'tryAgainMessage 2s ease-out forwards';
+            
+            document.querySelector('.game-container').appendChild(message);
+            
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.remove();
+                }
+            }, 2000);
+        }
+
+        function playSuccessSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                const frequencies = [523, 659, 784]; // C, E, G notes
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + index * 0.1);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime + index * 0.1);
+                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + index * 0.1 + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + index * 0.1 + 0.4);
+                    
+                    oscillator.start(audioContext.currentTime + index * 0.1);
+                    oscillator.stop(audioContext.currentTime + index * 0.1 + 0.4);
+                });
+            } catch (e) {
+                console.log('Audio not available');
+            }
+        }
+
+        function playTryAgainSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(350, audioContext.currentTime + 0.6);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.6);
+            } catch (e) {
+                console.log('Audio not available');
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        // Show welcome message on load
+        document.getElementById('message').style.display = 'block';
+
+        // Prevent context menu and text selection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+
+        // Handle orientation changes on mobile
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                // Force a repaint after orientation change
+                document.body.style.height = '100vh';
+            }, 100);
+        });
+
+        // Prevent zoom on double-tap for iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
