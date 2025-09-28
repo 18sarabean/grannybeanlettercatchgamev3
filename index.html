@@ -547,18 +547,7 @@
             spawnLetters();
             updateCollectorFace('😄');
             
-            // Initialize audio context on first user interaction (required for mobile)
-            try {
-                if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    if (audioContext.state === 'suspended') {
-                        audioContext.resume();
-                    }
-                }
-            } catch (e) {
-                console.log('Audio initialization failed');
-            }
-        }
+          
 
         function nextTarget() {
             const oldTarget = currentTarget;
@@ -796,11 +785,11 @@
             }, 2000);
         }
 
-        function playSuccessSound() {
+        function playsuccessSound() {
     successSound.play().catch(e => console.log('Audio playback failed:', e));
 }
 
-        function playTryAgainSound() {
+        function playtryAgainSound() {
     tryAgainSound.play().catch(e => console.log('Audio playback failed:', e));
 }
 
@@ -836,4 +825,5 @@
 </body>
 
 </html>
+
 
