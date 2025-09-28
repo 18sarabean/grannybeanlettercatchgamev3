@@ -50,12 +50,15 @@
         }
 
         .game-icon {
-            font-size: 36px;
-            background: linear-gradient(135deg, #10b981, #34d399);
-            padding: 8px 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
+    font-size: 36px;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
 
         .game-title {
             font-size: clamp(18px, 4vw, 28px);
@@ -405,10 +408,12 @@
                 flex: 1;
             }
 
-            .game-icon {
-                font-size: 28px;
-                padding: 6px 10px;
-            }
+           .game-icon {
+    font-size: 28px;
+    padding: 6px 10px;
+    width: 32px;
+    height: 32px;
+}
 
             .header-right {
                 gap: 10px;
@@ -487,7 +492,7 @@
     <div class="game-container">
         <div class="header">
             <div class="header-left">
-                <div class="game-icon">🎯</div>
+                <img src="images/grannybean.png" alt="Granny Bean" class="game-icon">
                 <div class="game-title">Letter Catch<br>Adventure</div>
             </div>
             <div class="header-right">
@@ -877,4 +882,5 @@
         }, false);
     </script>
 </body>
+
 </html>
