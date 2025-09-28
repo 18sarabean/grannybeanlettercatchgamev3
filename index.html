@@ -528,6 +528,8 @@
         let fallingLetters = [];
         let gameSpeed = 3000;
         let letterSpeed = 1;
+        const successSound = new Audio('sounds/ding.mp3');
+        const tryAgainSound = new Audio('sounds/boing.mp3');
 
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         const colors = ['#1e3a8a', '#10b981', '#3b82f6', '#34d399', '#1e40af', '#059669', '#2563eb', '#16a34a'];
@@ -795,62 +797,12 @@
         }
 
         function playSuccessSound() {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                
-                const frequencies = [523, 659, 784]; // C, E, G notes
-                frequencies.forEach((freq, index) => {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + index * 0.1);
-                    oscillator.type = 'sine';
-                    
-                    gainNode.gain.setValueAtTime(0, audioContext.currentTime + index * 0.1);
-                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + index * 0.1 + 0.05);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + index * 0.1 + 0.4);
-                    
-                    oscillator.start(audioContext.currentTime + index * 0.1);
-                    oscillator.stop(audioContext.currentTime + index * 0.1 + 0.4);
-                });
-            } catch (e) {
-                console.log('Audio not available');
-            }
-        }
+    successSound.play().catch(e => console.log('Audio playback failed:', e));
+}
 
         function playTryAgainSound() {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-                oscillator.frequency.linearRampToValueAtTime(350, audioContext.currentTime + 0.6);
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.6);
-            } catch (e) {
-                console.log('Audio not available');
-            }
-        }
+    tryAgainSound.play().catch(e => console.log('Audio playback failed:', e));
+}
 
         function updateScore() {
             document.getElementById('score').textContent = score;
@@ -884,3 +836,4 @@
 </body>
 
 </html>
+
