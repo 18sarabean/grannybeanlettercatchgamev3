@@ -521,310 +521,310 @@
         </div>
     </div>
 
-    <script>
-        let gameActive = false;
-        let score = 0;
-        let currentTarget = 'A';
-        let fallingLetters = [];
-        let gameSpeed = 3000;
-        let letterSpeed = 1;
-        const SuccessSound = new Audio('ding.mp3');
-        const TryAgainSound = new Audio('boing.mp3');
+<script>
+    let gameActive = false;
+    let score = 0;
+    let currentTarget = 'A';
+    let fallingLetters = [];
+    let gameSpeed = 3000;
+    let letterSpeed = 1;
+    const successSound = new Audio('sounds/ding.mp3');
+    const tryAgainSound = new Audio('sounds/boing.mp3');
 
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const colors = ['#1e3a8a', '#10b981', '#3b82f6', '#34d399', '#1e40af', '#059669', '#2563eb', '#16a34a'];
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const colors = ['#1e3a8a', '#10b981', '#3b82f6', '#34d399', '#1e40af', '#059669', '#2563eb', '#16a34a'];
+    
+    // Touch and mobile detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    function startGame() {
+        document.getElementById('message').style.display = 'none';
+        gameActive = true;
+        score = 0;
+        updateScore();
+        nextTarget();
+        spawnLetters();
+        updateCollectorFace('😄');
+    }
+
+    function nextTarget() {
+        const oldTarget = currentTarget;
+        do {
+            currentTarget = letters[Math.floor(Math.random() * letters.length)];
+        } while (currentTarget === oldTarget && letters.length > 1);
         
-        // Touch and mobile detection
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        document.getElementById('target').textContent = currentTarget;
+    }
 
-        function startGame() {
-            document.getElementById('message').style.display = 'none';
-            gameActive = true;
-            score = 0;
-            updateScore();
+    function updateCollectorFace(emotion) {
+        const face = document.querySelector('.collector-face');
+        if (face) {
+            face.textContent = emotion;
+            setTimeout(() => {
+                if (gameActive) face.textContent = '😊';
+            }, 1500);
+        }
+    }
+
+    function spawnLetters() {
+        if (!gameActive) return;
+        
+        createFallingLetter();
+        setTimeout(spawnLetters, gameSpeed);
+    }
+
+    function createFallingLetter() {
+        const letter = document.createElement('div');
+        letter.className = 'falling-letter';
+        
+        // 85% chance of correct letter, 15% chance of random letter
+        const isCorrect = Math.random() < 0.85;
+        const letterText = isCorrect ? currentTarget : letters[Math.floor(Math.random() * letters.length)];
+        
+        letter.textContent = letterText;
+        letter.dataset.letter = letterText;
+        letter.style.color = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Responsive positioning
+        const letterSize = Math.min(window.innerWidth * 0.15, 140);
+        const maxLeft = window.innerWidth - letterSize;
+        letter.style.left = Math.max(letterSize * 0.5, Math.random() * maxLeft) + 'px';
+        letter.style.top = '-150px';
+        
+        document.querySelector('.game-container').appendChild(letter);
+        fallingLetters.push(letter);
+        
+        // Add both click and touch event listeners
+        const handleClick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (letterText === currentTarget) {
+                catchCorrectLetter(letter);
+            } else {
+                catchWrongLetter(letter);
+            }
+        };
+
+        letter.addEventListener('click', handleClick);
+        if (isTouch) {
+            letter.addEventListener('touchstart', handleClick, {passive: false});
+        }
+        
+        animateFallingLetter(letter);
+    }
+
+    function animateFallingLetter(letter) {
+        let position = -150;
+        const fall = setInterval(() => {
+            if (!gameActive || !letter.parentNode) {
+                clearInterval(fall);
+                return;
+            }
+            
+            position += letterSpeed;
+            letter.style.top = position + 'px';
+            
+            // Remove letter if it goes off screen
+            if (position > window.innerHeight + 150) {
+                clearInterval(fall);
+                if (letter.parentNode) {
+                    letter.remove();
+                }
+                fallingLetters = fallingLetters.filter(l => l !== letter);
+            }
+        }, 20);
+    }
+
+    function catchCorrectLetter(letter) {
+        score += 1;
+        updateScore();
+        updateCollectorFace('🤩');
+        
+        // Get letter position for effects
+        const rect = letter.getBoundingClientRect();
+        
+        // Create multiple visual effects
+        createParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#10b981');
+        createStars(rect.left + rect.width/2, rect.top + rect.height/2);
+        showSuccessMessage(rect.left + rect.width/2, rect.top + rect.height/2);
+        playSuccessSound();
+        
+        // Remove letter immediately
+        if (letter.parentNode) {
+            letter.remove();
+        }
+        fallingLetters = fallingLetters.filter(l => l !== letter);
+        
+        // Increase difficulty slightly
+        if (score % 10 === 0 && gameSpeed > 1500) {
+            gameSpeed -= 200;
+            letterSpeed += 0.2;
+        }
+        
+        // Change target letter every 5 points
+        if (score % 5 === 0) {
             nextTarget();
-            spawnLetters();
-            updateCollectorFace('😄');
-        }   
-          
-
-        function nextTarget() {
-            const oldTarget = currentTarget;
-            do {
-                currentTarget = letters[Math.floor(Math.random() * letters.length)];
-            } while (currentTarget === oldTarget && letters.length > 1);
-            
-            document.getElementById('target').textContent = currentTarget;
         }
+    }
 
-        function updateCollectorFace(emotion) {
-            const face = document.querySelector('.collector-face');
-            if (face) {
-                face.textContent = emotion;
-                setTimeout(() => {
-                    if (gameActive) face.textContent = '😊';
-                }, 1500);
-            }
+    function catchWrongLetter(letter) {
+        updateCollectorFace('🤔');
+        
+        // Get letter position for effects
+        const rect = letter.getBoundingClientRect();
+        
+        // Gentle feedback for wrong letters
+        createParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#3b82f6');
+        showTryAgainMessage(rect.left + rect.width/2, rect.top + rect.height/2);
+        playTryAgainSound();
+        
+        // Remove letter immediately
+        if (letter.parentNode) {
+            letter.remove();
         }
+        fallingLetters = fallingLetters.filter(l => l !== letter);
+    }
 
-        function spawnLetters() {
-            if (!gameActive) return;
+    function createStars(x, y) {
+        const starShapes = ['⭐', '✨', '🌟', '💫', '🎉', '🎊'];
+        for (let i = 0; i < 6; i++) {
+            const star = document.createElement('div');
+            star.textContent = starShapes[Math.floor(Math.random() * starShapes.length)];
+            star.style.position = 'absolute';
+            star.style.left = x + 'px';
+            star.style.top = y + 'px';
+            star.style.fontSize = isMobile ? '24px' : '32px';
+            star.style.pointerEvents = 'none';
+            star.style.zIndex = '300';
+            star.style.animation = `starBurst 2s ease-out forwards`;
+            star.style.animationDelay = (i * 0.1) + 's';
             
-            createFallingLetter();
-            setTimeout(spawnLetters, gameSpeed);
-        }
-
-        function createFallingLetter() {
-            const letter = document.createElement('div');
-            letter.className = 'falling-letter';
+            // Random direction for stars
+            const angle = (Math.random() * 360) * (Math.PI / 180);
+            const distance = isMobile ? 40 + Math.random() * 30 : 60 + Math.random() * 40;
+            star.style.setProperty('--star-dx', Math.cos(angle) * distance + 'px');
+            star.style.setProperty('--star-dy', Math.sin(angle) * distance + 'px');
             
-            // 85% chance of correct letter, 15% chance of random letter
-            const isCorrect = Math.random() < 0.85;
-            const letterText = isCorrect ? currentTarget : letters[Math.floor(Math.random() * letters.length)];
-            
-            letter.textContent = letterText;
-            letter.dataset.letter = letterText;
-            letter.style.color = colors[Math.floor(Math.random() * colors.length)];
-            
-            // Responsive positioning
-            const letterSize = Math.min(window.innerWidth * 0.15, 140);
-            const maxLeft = window.innerWidth - letterSize;
-            letter.style.left = Math.max(letterSize * 0.5, Math.random() * maxLeft) + 'px';
-            letter.style.top = '-150px';
-            
-            document.querySelector('.game-container').appendChild(letter);
-            fallingLetters.push(letter);
-            
-            // Add both click and touch event listeners
-            const handleClick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (letterText === currentTarget) {
-                    catchCorrectLetter(letter);
-                } else {
-                    catchWrongLetter(letter);
-                }
-            };
-
-            letter.addEventListener('click', handleClick);
-            if (isTouch) {
-                letter.addEventListener('touchstart', handleClick, {passive: false});
-            }
-            
-            animateFallingLetter(letter);
-        }
-
-        function animateFallingLetter(letter) {
-            let position = -150;
-            const fall = setInterval(() => {
-                if (!gameActive || !letter.parentNode) {
-                    clearInterval(fall);
-                    return;
-                }
-                
-                position += letterSpeed;
-                letter.style.top = position + 'px';
-                
-                // Remove letter if it goes off screen
-                if (position > window.innerHeight + 150) {
-                    clearInterval(fall);
-                    if (letter.parentNode) {
-                        letter.remove();
-                    }
-                    fallingLetters = fallingLetters.filter(l => l !== letter);
-                }
-            }, 20);
-        }
-
-        function catchCorrectLetter(letter) {
-            score += 1;
-            updateScore();
-            updateCollectorFace('🤩');
-            
-            // Get letter position for effects
-            const rect = letter.getBoundingClientRect();
-            
-            // Create multiple visual effects
-            createParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#10b981');
-            createStars(rect.left + rect.width/2, rect.top + rect.height/2);
-            showSuccessMessage(rect.left + rect.width/2, rect.top + rect.height/2);
-            playSuccessSound();
-            
-            // Remove letter immediately
-            if (letter.parentNode) {
-                letter.remove();
-            }
-            fallingLetters = fallingLetters.filter(l => l !== letter);
-            
-            // Increase difficulty slightly
-            if (score % 10 === 0 && gameSpeed > 1500) {
-                gameSpeed -= 200;
-                letterSpeed += 0.2;
-            }
-            
-            // Change target letter every 5 points
-            if (score % 5 === 0) {
-                nextTarget();
-            }
-        }
-
-        function catchWrongLetter(letter) {
-            updateCollectorFace('🤔');
-            
-            // Get letter position for effects
-            const rect = letter.getBoundingClientRect();
-            
-            // Gentle feedback for wrong letters
-            createParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#3b82f6');
-            showTryAgainMessage(rect.left + rect.width/2, rect.top + rect.height/2);
-            playTryAgainSound();
-            
-            // Remove letter immediately
-            if (letter.parentNode) {
-                letter.remove();
-            }
-            fallingLetters = fallingLetters.filter(l => l !== letter);
-        }
-
-        function createStars(x, y) {
-            const starShapes = ['⭐', '✨', '🌟', '💫', '🎉', '🎊'];
-            for (let i = 0; i < 6; i++) {
-                const star = document.createElement('div');
-                star.textContent = starShapes[Math.floor(Math.random() * starShapes.length)];
-                star.style.position = 'absolute';
-                star.style.left = x + 'px';
-                star.style.top = y + 'px';
-                star.style.fontSize = isMobile ? '24px' : '32px';
-                star.style.pointerEvents = 'none';
-                star.style.zIndex = '300';
-                star.style.animation = `starBurst 2s ease-out forwards`;
-                star.style.animationDelay = (i * 0.1) + 's';
-                
-                // Random direction for stars
-                const angle = (Math.random() * 360) * (Math.PI / 180);
-                const distance = isMobile ? 40 + Math.random() * 30 : 60 + Math.random() * 40;
-                star.style.setProperty('--star-dx', Math.cos(angle) * distance + 'px');
-                star.style.setProperty('--star-dy', Math.sin(angle) * distance + 'px');
-                
-                document.querySelector('.game-container').appendChild(star);
-                
-                setTimeout(() => {
-                    if (star.parentNode) {
-                        star.remove();
-                    }
-                }, 2000);
-            }
-        }
-
-        function createParticles(x, y, color) {
-            for (let i = 0; i < 10; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.backgroundColor = color;
-                particle.style.left = x + 'px';
-                particle.style.top = y + 'px';
-                particle.style.animation = `sparkle 1.5s ease-out forwards`;
-                particle.style.animationDelay = (i * 0.1) + 's';
-                
-                document.querySelector('.game-container').appendChild(particle);
-                
-                setTimeout(() => {
-                    if (particle.parentNode) {
-                        particle.remove();
-                    }
-                }, 1500);
-            }
-        }
-
-        function showSuccessMessage(x, y) {
-            const messages = ['Amazing!', 'Perfect!', 'Great Job!', 'Awesome!', 'Fantastic!'];
-            const message = document.createElement('div');
-            message.textContent = messages[Math.floor(Math.random() * messages.length)];
-            message.style.position = 'absolute';
-            message.style.left = (x - 50) + 'px';
-            message.style.top = (y - 30) + 'px';
-            message.style.fontSize = isMobile ? '28px' : '40px';
-            message.style.fontWeight = 'bold';
-            message.style.color = '#10b981';
-            message.style.textShadow = '3px 3px 8px rgba(0,0,0,0.5)';
-            message.style.pointerEvents = 'none';
-            message.style.zIndex = '400';
-            message.style.animation = 'successMessage 2.5s ease-out forwards';
-            
-            document.querySelector('.game-container').appendChild(message);
+            document.querySelector('.game-container').appendChild(star);
             
             setTimeout(() => {
-                if (message.parentNode) {
-                    message.remove();
-                }
-            }, 2500);
-        }
-
-        function showTryAgainMessage(x, y) {
-            const messages = ['Keep Trying!', 'Try Again!', 'You Can Do It!', 'Look for ' + currentTarget + '!'];
-            const message = document.createElement('div');
-            message.textContent = messages[Math.floor(Math.random() * messages.length)];
-            message.style.position = 'absolute';
-            message.style.left = (x - 60) + 'px';
-            message.style.top = (y - 30) + 'px';
-            message.style.fontSize = isMobile ? '24px' : '32px';
-            message.style.fontWeight = 'bold';
-            message.style.color = '#3b82f6';
-            message.style.textShadow = '2px 2px 6px rgba(0,0,0,0.4)';
-            message.style.pointerEvents = 'none';
-            message.style.zIndex = '400';
-            message.style.animation = 'tryAgainMessage 2s ease-out forwards';
-            
-            document.querySelector('.game-container').appendChild(message);
-            
-            setTimeout(() => {
-                if (message.parentNode) {
-                    message.remove();
+                if (star.parentNode) {
+                    star.remove();
                 }
             }, 2000);
         }
+    }
 
-        function playSuccessSound() {
-    SuccessSound.play().catch(e => console.log('Audio playback failed:', e));
-}
-
-        function playTryAgainSound() {
-    TryAgainSound.play().catch(e => console.log('Audio playback failed:', e));
-}
-
-        function updateScore() {
-            document.getElementById('score').textContent = score;
-        }
-
-        // Show welcome message on load
-        document.getElementById('message').style.display = 'block';
-
-        // Prevent context menu and text selection
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('selectstart', e => e.preventDefault());
-
-        // Handle orientation changes on mobile
-        window.addEventListener('orientationchange', function() {
+    function createParticles(x, y, color) {
+        for (let i = 0; i < 10; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.backgroundColor = color;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.animation = `sparkle 1.5s ease-out forwards`;
+            particle.style.animationDelay = (i * 0.1) + 's';
+            
+            document.querySelector('.game-container').appendChild(particle);
+            
             setTimeout(() => {
-                // Force a repaint after orientation change
-                document.body.style.height = '100vh';
-            }, 100);
-        });
+                if (particle.parentNode) {
+                    particle.remove();
+                }
+            }, 1500);
+        }
+    }
 
-        // Prevent zoom on double-tap for iOS
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
+    function showSuccessMessage(x, y) {
+        const messages = ['Amazing!', 'Perfect!', 'Great Job!', 'Awesome!', 'Fantastic!'];
+        const message = document.createElement('div');
+        message.textContent = messages[Math.floor(Math.random() * messages.length)];
+        message.style.position = 'absolute';
+        message.style.left = (x - 50) + 'px';
+        message.style.top = (y - 30) + 'px';
+        message.style.fontSize = isMobile ? '28px' : '40px';
+        message.style.fontWeight = 'bold';
+        message.style.color = '#10b981';
+        message.style.textShadow = '3px 3px 8px rgba(0,0,0,0.5)';
+        message.style.pointerEvents = 'none';
+        message.style.zIndex = '400';
+        message.style.animation = 'successMessage 2.5s ease-out forwards';
+        
+        document.querySelector('.game-container').appendChild(message);
+        
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
             }
-            lastTouchEnd = now;
-        }, false);
-    </script>
+        }, 2500);
+    }
+
+    function showTryAgainMessage(x, y) {
+        const messages = ['Keep Trying!', 'Try Again!', 'You Can Do It!', 'Look for ' + currentTarget + '!'];
+        const message = document.createElement('div');
+        message.textContent = messages[Math.floor(Math.random() * messages.length)];
+        message.style.position = 'absolute';
+        message.style.left = (x - 60) + 'px';
+        message.style.top = (y - 30) + 'px';
+        message.style.fontSize = isMobile ? '24px' : '32px';
+        message.style.fontWeight = 'bold';
+        message.style.color = '#3b82f6';
+        message.style.textShadow = '2px 2px 6px rgba(0,0,0,0.4)';
+        message.style.pointerEvents = 'none';
+        message.style.zIndex = '400';
+        message.style.animation = 'tryAgainMessage 2s ease-out forwards';
+        
+        document.querySelector('.game-container').appendChild(message);
+        
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 2000);
+    }
+
+    function playSuccessSound() {
+        successSound.play().catch(e => console.log('Audio playback failed:', e));
+    }
+
+    function playTryAgainSound() {
+        tryAgainSound.play().catch(e => console.log('Audio playback failed:', e));
+    }
+
+    function updateScore() {
+        document.getElementById('score').textContent = score;
+    }
+
+    // Show welcome message on load
+    document.getElementById('message').style.display = 'block';
+
+    // Prevent context menu and text selection
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+
+    // Handle orientation changes on mobile
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            // Force a repaint after orientation change
+            document.body.style.height = '100vh';
+        }, 100);
+    });
+
+    // Prevent zoom on double-tap for iOS
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+</script>
 </body>
 
 </html>
+
 
 
 
